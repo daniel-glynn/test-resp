@@ -1,0 +1,212 @@
+swagger: "2.0"
+info:
+  version: "1"
+  title: "CRUD"
+  description: "demonstrate Swagger UI bug (model schemas repeated; wrong description)"
+basePath: "/crud"
+schemes:
+- "http"
+paths:
+  /models:
+    get:
+      summary: "Get a collection of models"
+      description: "Returns a collection of models based on the specified pagination,\
+        \ filtering, and sorting options. The items in the collection use the application/vnd.sas.model\
+        \ media type."
+      operationId: "models"
+      produces:
+      - "application/vnd.sas.collection+json"
+      - "application/json"
+      responses:
+        200:
+          description: "The request succeeded."
+          schema:
+            $ref: "#/definitions/modelCollection"
+    post:
+      summary: "Create a new model."
+      description: "Creates a new model based on the representation in the request\
+        \ body."
+      operationId: "createModel"
+      consumes:
+      - "application/vnd.sas.model+json"
+      - "application/json"
+      produces:
+      - "application/vnd.sas.model+json"
+      - "application/json"
+      parameters:
+      - name: "model"
+        in: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/createModel"
+        description: "The representation of a model."
+      responses:
+        201:
+          description: "A model was created"
+          schema:
+            $ref: "#/definitions/model"
+          headers:
+            Location:
+              description: "The URL of the model."
+              type: "string"
+              format: "uri"
+  /models/{modelId}:
+    get:
+      parameters:
+      - name: "modelId"
+        in: "path"
+        type: "string"
+        required: true
+        description: "The unique identifier for the model."
+      summary: " Get a model."
+      description: "Returns the representation of the specified model."
+      operationId: "model"
+      produces:
+      - "application/vnd.sas.model+json"
+      - "application/json"
+      responses:
+        200:
+          description: "The request succeeded."
+          schema:
+            $ref: "#/definitions/model"
+        404:
+          description: " No model exists at the requested path."
+    head:
+      summary: "Get the headers for a model"
+      description: "Returns the HTTP headers for a model Also used to determine whether\
+        \ a particular model exists.."
+      produces:
+      - "application/vnd.sas.model+json"
+      - "application/json"
+      operationId: "headersForModel"
+      responses:
+        200:
+          description: "Successful request. model exists in collection."
+        404:
+          description: "No model exists at the requested path."
+    put:
+      summary: "Update a model"
+      description: "Updates the specified model based on the representation in the\
+        \ request body."
+      operationId: "updateModel"
+      parameters:
+      - name: "model"
+        in: "body"
+        schema:
+          $ref: "#/definitions/updateModel"
+        description: "The representation of a model."
+      responses:
+        200:
+          description: "The request succeeded"
+          schema:
+            $ref: "#/definitions/model"
+        404:
+          description: "No model exists at the requested path."
+    delete:
+      summary: "Delete a model"
+      description: "Deletes the specified model."
+      operationId: "deleteModel"
+      responses:
+        204:
+          description: "The model was deleted."
+        404:
+          description: "No model exists at the requested path."
+    parameters:
+    - name: "modelId"
+      in: "path"
+      type: "string"
+      description: "modelId"
+      required: true
+definitions:
+  createModel:
+    title: "Create Model"
+    description: "The representation used to create a new model."
+    properties:
+      name:
+        type: "string"
+  updateModel:
+    title: "Update Model"
+    description: "The representation used to update a model."
+    allOf:
+    - $ref: "#/definitions/createModel"
+    - type: "object"
+      properties:
+        id:
+          type: "string"
+          description: "The unique identifier for the model."
+        name:
+          type: "string"
+          description: "The name of the model."
+        description:
+          type: "string"
+          description: "The description of the model."
+        version:
+          type: "integer"
+          format: "int32"
+          description: "The version number of the model representation."
+    required:
+    - "id"
+  model:
+    title: "Model"
+    description: "The representation of a model."
+    allOf:
+    - $ref: "#/definitions/updateModel"
+    - type: "object"
+      properties:
+        createdBy:
+          type: "string"
+          description: "The user who created the model."
+        modifiedBy:
+          type: "string"
+          description: "The user who most recently modified the model."
+        creationTimeStamp:
+          type: "string"
+          description: "The time stamp in `YYYY-MM-DDThh:mm:ss.sssZ` format when the\
+            \ model was created."
+          format: "date-time"
+        modifiedTimeStamp:
+          type: "string"
+          description: "The time stamp in `YYYY-MM-DDThh:mm:ss.sssZ` format when the\
+            \ model was last modified."
+          format: "date-time"
+  modelCollection:
+    title: "Model Summary Collection"
+    description: "A collection of model representations."
+    allOf:
+    - $ref: "#/definitions/baseCollection2"
+    - type: "object"
+      properties:
+        items:
+          type: "array"
+          items:
+            $ref: "#/definitions/model"
+          description: "The array of  representations."
+  baseCollection2:
+    title: "Base collection"
+    description: "This is a base schema used to define paginated collections of resources.\
+      \ This base schema is extended by other schemas in APIs by adding an 'items'\
+      \ array property. These extensions define the application/vnd.sas.collection\
+      \ media type (version 2)"
+    properties:
+      name:
+        type: "string"
+        description: "The name of the collection."
+      start:
+        type: "integer"
+        description: "The zero-based index of the first item in the collection."
+        format: "int64"
+      limit:
+        type: "integer"
+        description: "The number of items that were requested for the collection."
+      count:
+        type: "integer"
+        description: "The number of items in the collection."
+        format: "int64"
+      accept:
+        type: "string"
+        description: "A space-delimited list of media types from which an `Accept`\
+          \ header may be constructed."
+      version:
+        type: "integer"
+        description: "The version number of the collection representation. This representation\
+          \ is version 2."
