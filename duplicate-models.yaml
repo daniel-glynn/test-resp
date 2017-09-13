@@ -147,9 +147,9 @@ definitions:
     required:
     - "id"
   model:
-    title: "Model"
     description: "The representation of a model."
     allOf:
+    - title: "Model"
     - $ref: "#/definitions/updateModel"
     - type: "object"
       properties:
