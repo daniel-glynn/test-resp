@@ -149,8 +149,8 @@ definitions:
   model:
     description: "The representation of a model."
     allOf:
-    - title: "Model"
     - $ref: "#/definitions/updateModel"
+    - title: "Model"
     - type: "object"
       properties:
         createdBy:
