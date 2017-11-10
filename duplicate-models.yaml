@@ -576,7 +576,7 @@ securityDefinitions:
     name: api_key
     in: header
 definitions:
-  productStateFilter:
+  productStateFilterproductStateFilter:
     type: string
     description: You can filter on the product state
     enum:
