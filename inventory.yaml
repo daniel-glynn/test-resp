@@ -102,7 +102,6 @@ components:
       description: The current Offset
       schema:
         type: integer
-        example: 0
     X-TUI-EAI-TotalResults:
       description: Total results
       schema:
