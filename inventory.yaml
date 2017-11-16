@@ -1,109 +1,184 @@
 openapi: 3.0.0
-servers: []
+servers:
+# Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/SmartBear-CC/Anastasia_Test_123/1.0.6-oas3
+  - url: 'https://virtserver.swaggerhub.com/SmartBear-CC/Test_123/1.0.0'
+  - url: https://example.com
 info:
-  description: This is an example API to demonstrate a possible bug. JSON is rendered well, but XML is not rendering all the examples, but just the first one.
-  version: "2.0.0"
-  title: Simple API
+  description: This is a simple API
+  version: "1.0.6-oas3"
+  title: Simple Inventory API
   contact:
-    email: mwgrootwassink@tui.nl
-
+    email: you@your-company.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: admins
+    description: Secured Admin-only calls
+  - name: developers
+    description: Operations available to regular developers
 paths:
-  /books:
+  /realtime/events:
+    post:
+      summary: 'Souscrire aux évènements en temps réel, via des webhooks'
+      description: |
+        Souscrire aux évènements en temps réel, via des webhooks.
+      tags:
+        - Device
+        - Webhook
+        - IoT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - callbackUrl
+                - targetAssets
+                - jwt
+              properties:
+                callbackUrl: # Callback URL
+                  type: string
+                  format: uri
+                  example: https://myserver.com/send/callback/here
+                targetAssets:
+                  description: Identifiants des Assets pour lesquels il faut transmettre les données.
+                  type: array
+                  items:
+                    type: string
+                jwt:
+                  type: string
+                  description: JSON Web Token fourni par l'application métier afin que le serveur puisse authentifier les requêtes de callback.
+      callbacks: # Callback definition
+        alarmEvent: # Event name
+          '{$request.body#/callbackUrl}': # The callback URL
+            post:
+              requestBody: # Contents of the callback message
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      oneOf:
+                        - type: object
+                          additionalProperties: false
+                          properties:
+                            code:
+                              type: number
+                              description: Code d'erreur
+                            message:
+                              type: string
+                              description: Message d'erreur
+                        - type: object
+                          description: Objet technique
+              responses: 
+                '200':
+                  description: Your server returns this code if it accepts the callback
+      responses:
+        '201':
+          description: Webhook created
+
+  /inventory:
     get:
       tags:
-        - command
-      summary: searches books
-      operationId: searchBooks
+        - developers
+      summary: searches inventory
+      operationId: searchInventory
       description: |
         By passing in the appropriate options, you can search for
-        available books in the system
+        available inventory in the system
+      servers:
+        - url: https://files.example.com
       parameters:
         - in: query
-          name: title
+          name: searchString
+          description: pass an optional search string for looking up inventory
           required: false
           schema:
             type: string
         - in: query
-          name: author
-          required: false
+          name: skip
+          description: number of records to skip for pagination
           schema:
-            type: string
+            type: integer
+            format: int32
+            minimum: 0
         - in: query
-          name: publisher
-          required: false
+          name: limit
+          description: maximum number of records to return
           schema:
-            type: string
-
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
       responses:
         '200':
           description: search results matching criteria
           content:
-            application/xml:
+            application/json:
               schema:
                 type: array
-                $ref: '#/components/schemas/Books'
-          headers:
-            X-TUI-EAI-Limit:
-              $ref: '#/components/headers/X-TUI-EAI-Limit'
-            X-TUI-EAI-NextOffsetLink:
-              $ref: '#/components/headers/X-TUI-EAI-NextOffsetLink'
-            X-TUI-EAI-Offset:
-              $ref: '#/components/headers/X-TUI-EAI-Offset'
-            X-TUI-EAI-TotalResults:
-              $ref: '#/components/headers/X-TUI-EAI-TotalResults'                
-
-
+                items:
+                  $ref: '#/components/schemas/InventoryItem'
+        '400':
+          description: bad input parameter
+    post:
+      tags:
+        - admins
+      summary: adds an inventory item
+      operationId: addInventory
+      description: Adds an item to the system
+      responses:
+        '201':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryItem'
+        description: Inventory item to add
 components:
   schemas:
-  
-    Books:
-      type: array
-      xml:
-        name: books
-        wrapped: true
-      items:
-        $ref: '#/components/schemas/Book'
-      example:
-        - isbn: '9780099179511'
-          title: The Chamber
-          author: John Grisham
-        - isbn: '9780385424738'
-          title: The rainmaker
-          author: John Grisham
-        - isbn: '9780552149518'
-          title: The Da Vinci Code
-          author: Dan Brown
-
-    Book:
+    InventoryItem:
       type: object
-      xml:
-        name: book
+      required:
+        - id
+        - name
+        - manufacturer
+        - releaseDate
       properties:
-        isbn:
+        id:
           type: string
           format: uuid
-        title:
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        name:
           type: string
-        author:
+          example: Widget Adapter
+        releaseDate:
           type: string
-          
-  headers:
-    X-TUI-EAI-Limit:
-      description: Maximum number of responses in list. Equals to the query parameter
-      schema:
-        type: integer
-        example: 100
-    X-TUI-EAI-NextOffsetLink:
-      description: Link to the next Offset of response objects
-      schema:
-        type: string
-        example: 'http://eai.tui.com/Airports'
-    X-TUI-EAI-Offset:
-      description: The current Offset
-      schema:
-        type: integer
-    X-TUI-EAI-TotalResults:
-      description: Total results
-      schema:
-        type: integer
-        example: 2
+          format: int32
+          example: '2016-08-29T09:12:33.001Z'
+        manufacturer:
+          $ref: '#/components/schemas/Manufacturer'
+    Manufacturer:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: ACME Corporation
+        homePage:
+          type: string
+          format: url
+          example: 'https://www.acme-corp.com'
+        phone:
+          type: string
+          example: 408-867-5309
+      type: object
