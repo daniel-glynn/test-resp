@@ -16,7 +16,7 @@ paths:
       operationId: searchBooks
       description: |
         By passing in the appropriate options, you can search for
-        available books in the system
+        available books in the systemd
       parameters:
         - in: query
           name: title
